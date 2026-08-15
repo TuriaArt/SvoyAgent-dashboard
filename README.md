@@ -22,7 +22,7 @@ agent data is present.
 - **Memory analysis** — core size, vault quality, broken links, summaries.
 - **Ops / attention panel** — shift summary, guards, errors, work items.
 
-![Screenshot placeholder](https://via.placeholder.com/960x540?text=Agent+Dashboard+screenshot)
+![Screenshot placeholder]([https://via.placeholder.com/960x540?text=Agent+Dashboard+screenshot](https://imgfy.ru/ehvXnssJuCCJnG8))
 
 ## Quick start
 

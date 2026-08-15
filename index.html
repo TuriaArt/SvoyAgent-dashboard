@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agent Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Agent Operations</p>
+          <h1 id="dashboard-title">Agent Dashboard</h1>
+        </div>
+        <nav class="nav-tabs" aria-label="Основные разделы">
+          <button class="nav-tab is-active" type="button" data-view="dashboard">Dashboard</button>
+          <button class="nav-tab" type="button" data-view="kanban">Kanban</button>
+          <button class="nav-tab" type="button" data-view="plans">Планы</button>
+          <button class="nav-tab" type="button" data-view="projects">Проекты</button>
+          <button class="nav-tab" type="button" data-view="skills">Скиллы</button>
+        </nav>
+      </header>
+
+      <main>
+        <section id="dashboard-view" class="view is-active" aria-label="Главный дашборд">
+          <section class="passport panel" aria-label="Паспорт системы">
+            <div class="passport-item">
+              <span>provider</span>
+              <strong id="passport-provider">deepseek</strong>
+            </div>
+            <div class="passport-item">
+              <span>model</span>
+              <strong id="passport-model">deepseek-v4-flash</strong>
+            </div>
+            <div class="passport-item">
+              <span>fallback</span>
+              <strong id="passport-fallback">deepseek-v4-pro</strong>
+            </div>
+            <div class="passport-item">
+              <span>uptime</span>
+              <strong id="passport-uptime">19d 04h</strong>
+            </div>
+            <div class="passport-item passport-commit">
+              <span>commit</span>
+              <strong id="passport-commit">f5126ad smoke+tests</strong>
+            </div>
+            <button id="refresh-btn" class="icon-button" type="button" title="Обновить мок-срез">↻</button>
+          </section>
+
+          <section class="deck-band instruments-band" aria-label="System Status">
+            <div class="band-label">
+              <span>01</span>
+              <strong>System Status</strong>
+              <em>health &middot; pipeline &middot; resources</em>
+            </div>
+            <section id="kpi-grid" class="kpi-grid" aria-label="KPI"></section>
+            <div class="last-turn-strip" aria-label="Последний турн">
+              <div class="last-turn-strip-main">
+                <span>Last Turn</span>
+                <strong id="last-turn-inline">21:42 &middot; dashboard_main_page &middot; 1842ms</strong>
+                <span id="last-turn-status" class="status-pill status-ok">OK</span>
+              </div>
+              <div id="last-turn-card" class="last-turn-card last-turn-inline-card"></div>
+            </div>
+          </section>
+
+          <section class="deck-band actions-band" aria-label="Операторская линия">
+            <div class="band-label">
+              <span>02</span>
+              <strong>Операторский контур</strong>
+              <em>решения &middot; память &middot; что чинить</em>
+            </div>
+            <div class="ops-grid">
+            <article class="panel operator-panel">
+              <div class="panel-heading compact">
+                <div>
+                  <p class="eyebrow">Operator Log</p>
+                  <h2>Последние решения</h2>
+                </div>
+              </div>
+              <div id="operator-list" class="operator-list"></div>
+            </article>
+
+            <article class="panel memory-panel">
+              <div class="panel-heading compact">
+                <div>
+                  <p class="eyebrow">Vault</p>
+                  <h2>Память</h2>
+                </div>
+                <span class="status-pill status-warn">80.9 ↓</span>
+              </div>
+              <div id="memory-grid" class="mini-metric-grid"></div>
+            </article>
+
+            <article class="panel attention-panel">
+              <div class="panel-heading compact">
+                <div>
+                  <p class="eyebrow">Action Queue</p>
+                  <h2>Требует внимания</h2>
+                </div>
+                <span id="attention-count" class="status-pill status-warn">4</span>
+              </div>
+              <div id="attention-list" class="attention-list"></div>
+            </article>
+            </div>
+          </section>
+
+          <section class="deck-band telemetry-band" aria-label="Turns">
+            <div class="band-label">
+              <span>03</span>
+              <strong>Турны</strong>
+              <em>ходы за 14 дней</em>
+            </div>
+            <section class="panel trace-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Активность</p>
+                  <h2>Турны по дням</h2>
+                </div>
+                <div class="panel-actions">
+                  <div class="trace-legend" aria-label="Легенда активности">
+                    <span class="legend-item"><i class="legend-dot neutral"></i>обычный день</span>
+                    <span class="legend-item"><i class="legend-dot warn"></i>были ошибки</span>
+                  </div>
+                  <span class="status-pill status-warn">14 дней</span>
+                </div>
+              </div>
+              <div id="run-bars" class="run-bars" aria-label="График ходов за 14 дней"></div>
+            </section>
+          </section>
+
+          <section class="deck-band stream-band" aria-label="SSE Stream">
+            <div class="band-label">
+              <span>04</span>
+              <strong>Живой поток</strong>
+              <em>сырой событийный слой</em>
+            </div>
+            <section class="panel live-panel" aria-label="Лента событий">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">SSE Stream</p>
+                  <h2>Лента событий</h2>
+                </div>
+                <div class="panel-actions">
+                  <span class="status-pill status-ok">live</span>
+                  <span id="event-count" class="status-pill">0</span>
+                </div>
+              </div>
+              <div id="event-legend" class="event-filter-bar" aria-label="Легенда и фильтр событий"></div>
+              <button id="new-events-btn" class="new-events" type="button">новые события: 0 ↓</button>
+              <div id="event-feed" class="event-feed"></div>
+            </section>
+          </section>
+
+          <section class="deck-band handoff-band" aria-label="Срез">
+            <div class="band-label">
+              <span>06</span>
+              <strong>Срез смены</strong>
+              <em>вердикт &middot; турны &middot; ошибки</em>
+            </div>
+            <div class="snapshot-grid">
+            <article class="panel verdict-panel">
+              <div class="verdict-status">
+                <span id="verdict-status" class="status-pill status-warn">WARN</span>
+                <span id="verdict-updated" class="muted">срез 40 мин назад</span>
+              </div>
+              <h2 id="verdict-title">Агент работает, но память и guard-контур требуют внимания.</h2>
+              <p id="verdict-copy" class="verdict-copy">Doctor score снижается, ratchet устарел, health endpoint недоступен и переключён на fallback-файл.</p>
+              <ul id="verdict-actions" class="verdict-actions"></ul>
+            </article>
+
+            <article class="panel slice-panel">
+              <div class="panel-heading compact">
+                <div>
+                  <p class="eyebrow">Today Slice</p>
+                  <h2>Срез</h2>
+                </div>
+                <span id="turn-count-label" class="status-pill">5</span>
+              </div>
+              <div id="turn-list" class="turn-list"></div>
+            </article>
+
+            <article class="panel errors-panel">
+              <div class="panel-heading compact">
+                <div>
+                  <p class="eyebrow">Sources</p>
+                  <h2>Причины внимания</h2>
+                </div>
+              </div>
+              <div id="error-list" class="error-list"></div>
+            </article>
+            </div>
+          </section>
+        </section>
+
+        <section id="kanban-view" class="view" aria-label="Канбан">
+          <section class="panel kanban-header">
+            <div>
+              <p class="eyebrow">Kanban OS</p>
+              <h2>Доска задач</h2>
+            </div>
+            <div id="kanban-stats" class="kanban-stats" aria-label="Сводка канбана"></div>
+          </section>
+          <section class="panel kanban-toolbar" aria-label="Быстрое управление канбаном">
+            <div class="kanban-toolbar-search">
+              <label class="kanban-search">
+                <span>Поиск</span>
+                <input id="kanban-search" type="search" placeholder="Название, описание, #id" autocomplete="off" />
+              </label>
+              <label class="kanban-search compact-input">
+                <span>Тег</span>
+                <input id="kanban-tag-filter" type="search" placeholder="kanban" autocomplete="off" />
+              </label>
+            </div>
+            <div class="kanban-toolbar-actions">
+              <button class="kanban-reset" type="button" data-kanban-panel="filters">Filters</button>
+              <button class="kanban-reset" type="button" data-kanban-panel="view">View</button>
+              <button class="kanban-reset" type="button" data-kanban-reset>Reset</button>
+            </div>
+          </section>
+          <section class="kanban-workspace" aria-label="Рабочая зона канбана">
+            <aside class="panel kanban-side-panel" data-kanban-panel-target="filters" aria-label="Фильтры канбана">
+              <div class="kanban-panel-head">
+                <div>
+                  <p class="eyebrow">Filters</p>
+                  <h2>Отбор задач</h2>
+                </div>
+                <button type="button" data-kanban-panel-close="filters">&times;</button>
+              </div>
+              <div>
+                <span class="kanban-control-label">Проекты</span>
+                <div id="kanban-project-filters" class="kanban-chipset"></div>
+              </div>
+              <div>
+                <span class="kanban-control-label">Стадии</span>
+                <div id="kanban-stage-filters" class="kanban-chipset"></div>
+              </div>
+            </aside>
+            <aside class="panel kanban-side-panel" data-kanban-panel-target="view" aria-label="Вид карточек">
+              <div class="kanban-panel-head">
+                <div>
+                  <p class="eyebrow">View</p>
+                  <h2>Поля карточек</h2>
+                </div>
+                <button type="button" data-kanban-panel-close="view">&times;</button>
+              </div>
+              <div>
+                <span class="kanban-control-label">Поля карточки</span>
+                <div id="kanban-field-toggles" class="kanban-chipset"></div>
+              </div>
+            </aside>
+            <section id="kanban-board" class="kanban-board" aria-label="Канбан-доска"></section>
+          </section>
+          <section id="task-detail-modal" class="task-detail-modal" aria-label="Карточка задачи" aria-modal="true" role="dialog" hidden>
+            <div class="task-detail-backdrop" data-task-detail-close></div>
+            <article class="panel task-detail-dialog">
+              <div class="task-detail-head">
+                <div>
+                  <p id="task-detail-kicker" class="eyebrow">Task</p>
+                  <h2 id="task-detail-title"></h2>
+                </div>
+                <button type="button" data-task-detail-close aria-label="Закрыть">&times;</button>
+              </div>
+              <div id="task-detail-body" class="task-detail-body"></div>
+            </article>
+          </section>
+        </section>
+
+        <section id="projects-view" class="view" aria-label="Projects">
+          <section class="plans-shell projects-shell">
+            <section class="panel plans-hero projects-hero">
+              <div>
+                <p class="eyebrow">Project Vault</p>
+                <h2>&#1055;&#1088;&#1086;&#1077;&#1082;&#1090;&#1099;</h2>
+                <p class="plans-subtitle">7 &#1088;&#1072;&#1073;&#1086;&#1095;&#1080;&#1093; &#1082;&#1086;&#1085;&#1090;&#1091;&#1088;&#1086;&#1074; &#1048;&#1074;&#1099; &#1080;&#1079; obsidian-vault/projects, &#1082;&#1091;&#1088;&#1072;&#1090;&#1086;&#1088;&#1099; &#1080; tone-of-voice.</p>
+              </div>
+              <div id="projects-stats" class="plans-stats"></div>
+            </section>
+
+            <section class="panel plans-toolbar projects-toolbar" aria-label="Project filters">
+              <div class="plan-toolbar-cell plan-toolbar-search">
+                <label class="plan-search">
+                  <span>&#1055;&#1086;&#1080;&#1089;&#1082;</span>
+                  <input id="project-search" type="search" placeholder="&#1087;&#1088;&#1086;&#1077;&#1082;&#1090;, &#1082;&#1091;&#1088;&#1072;&#1090;&#1086;&#1088;, &#1086;&#1087;&#1080;&#1089;&#1072;&#1085;&#1080;&#1077;" autocomplete="off" />
+                </label>
+              </div>
+              <div class="plan-toolbar-cell">
+                <span class="plan-toolbar-label">&#1050;&#1091;&#1088;&#1072;&#1090;&#1086;&#1088;</span>
+                <div id="project-curator-filters" class="plan-filter-row" aria-label="Project curator filters"></div>
+              </div>
+            </section>
+
+            <section class="plans-grid">
+              <section class="panel plan-list-panel">
+                <div class="panel-heading compact">
+                  <div>
+                    <p class="eyebrow">Registry</p>
+                    <h2>&#1050;&#1072;&#1088;&#1090;&#1072; &#1087;&#1088;&#1086;&#1077;&#1082;&#1090;&#1086;&#1074;</h2>
+                  </div>
+                  <div class="plan-list-source">
+                    <span id="projects-root">projects folder</span>
+                    <strong id="projects-visible-count">0 / 0</strong>
+                  </div>
+                </div>
+                <div id="project-list" class="project-list"></div>
+              </section>
+            </section>
+          </section>
+
+          <section id="project-detail-modal" class="plan-detail-modal" aria-label="Project detail" aria-modal="true" role="dialog" hidden>
+            <div class="plan-detail-backdrop" data-project-close></div>
+            <article class="panel plan-detail-dialog project-detail-dialog">
+              <div class="plan-detail-head">
+                <div>
+                  <p id="project-detail-kicker" class="eyebrow">Project</p>
+                  <h2 id="project-detail-title"></h2>
+                </div>
+                <button type="button" data-project-close aria-label="Close">&times;</button>
+              </div>
+              <div id="project-detail-meta" class="plan-detail-meta"></div>
+              <div id="project-detail-overview" class="project-detail-overview"></div>
+              <label class="project-tov-editor">
+                <span>tone-of-voice.md</span>
+                <textarea id="project-tov-editor" class="plan-editor" spellcheck="false"></textarea>
+              </label>
+              <div class="plan-detail-actions">
+                <span id="project-save-state" class="muted">editable TOV</span>
+                <button id="project-save-btn" class="plan-save-btn" type="button">&#1057;&#1086;&#1093;&#1088;&#1072;&#1085;&#1080;&#1090;&#1100; TOV</button>
+              </div>
+            </article>
+          </section>
+        </section>
+
+        <section id="plans-view" class="view" aria-label="Plans">
+          <section class="plans-shell">
+            <section class="panel plans-hero">
+              <div>
+                <p class="eyebrow">Plan Library</p>
+                <h2>&#1055;&#1083;&#1072;&#1085;&#1099;</h2>
+                <p class="plans-subtitle">&#1041;&#1099;&#1089;&#1090;&#1088;&#1099;&#1081; &#1087;&#1086;&#1080;&#1089;&#1082;, &#1092;&#1080;&#1083;&#1100;&#1090;&#1088;&#1099; &#1080; &#1087;&#1086;&#1083;&#1085;&#1086;&#1077; &#1086;&#1082;&#1085;&#1086; &#1087;&#1083;&#1072;&#1085;&#1072; &#1080;&#1079; markdown-&#1092;&#1072;&#1081;&#1083;&#1086;&#1074;.</p>
+              </div>
+              <div id="plans-stats" class="plans-stats"></div>
+            </section>
+
+            <section class="panel plans-toolbar" aria-label="Plan filters">
+              <div class="plan-toolbar-cell plan-toolbar-search">
+                <label class="plan-search">
+                  <span>&#1055;&#1086;&#1080;&#1089;&#1082;</span>
+                  <input id="plan-search" type="search" placeholder="&#1085;&#1072;&#1079;&#1074;&#1072;&#1085;&#1080;&#1077;, &#1090;&#1077;&#1082;&#1089;&#1090;, &#1092;&#1072;&#1081;&#1083;" autocomplete="off" />
+                </label>
+              </div>
+              <div class="plan-toolbar-cell">
+                <span class="plan-toolbar-label">&#1057;&#1090;&#1072;&#1090;&#1091;&#1089;</span>
+                <div id="plan-status-filters" class="plan-filter-row" aria-label="Status filters"></div>
+              </div>
+            </section>
+
+            <section class="plans-grid">
+              <section class="panel plan-list-panel">
+                <div class="panel-heading compact">
+                  <div>
+                    <p class="eyebrow">Registry</p>
+                    <h2>&#1057;&#1087;&#1080;&#1089;&#1086;&#1082; &#1087;&#1083;&#1072;&#1085;&#1086;&#1074;</h2>
+                  </div>
+                  <div class="panel-actions">
+                    <span id="plans-root" class="status-pill">plans folder</span>
+                    <span id="plans-visible-count" class="status-pill">0</span>
+                  </div>
+                </div>
+                <div id="plan-list" class="plan-list"></div>
+              </section>
+            </section>
+          </section>
+
+          <section id="plan-detail-modal" class="plan-detail-modal" aria-label="Plan detail" aria-modal="true" role="dialog" hidden>
+            <div class="plan-detail-backdrop" data-plan-close></div>
+            <article class="panel plan-detail-dialog">
+              <div class="plan-detail-head">
+                <div>
+                  <p id="plan-detail-kicker" class="eyebrow">Plan</p>
+                  <h2 id="plan-detail-title"></h2>
+                </div>
+                <button type="button" data-plan-close aria-label="Close">&times;</button>
+              </div>
+              <div id="plan-detail-meta" class="plan-detail-meta"></div>
+              <textarea id="plan-editor" class="plan-editor" spellcheck="false"></textarea>
+              <div class="plan-detail-actions">
+                <span id="plan-save-state" class="muted">&#1052;&#1086;&#1078;&#1085;&#1086; &#1088;&#1077;&#1076;&#1072;&#1082;&#1090;&#1080;&#1088;&#1086;&#1074;&#1072;&#1090;&#1100; markdown &#1087;&#1088;&#1103;&#1084;&#1086; &#1079;&#1076;&#1077;&#1089;&#1100;.</span>
+                <label class="plan-status-edit">
+                  <span>status</span>
+                  <select id="plan-status-select"></select>
+                </label>
+                <button id="plan-save-btn" class="plan-save-btn" type="button">&#1057;&#1086;&#1093;&#1088;&#1072;&#1085;&#1080;&#1090;&#1100;</button>
+              </div>
+            </article>
+          </section>
+        </section>
+
+        <section id="skills-view" class="view" aria-label="Skills">
+          <section class="plans-shell skills-shell">
+            <section class="panel plans-hero skills-hero">
+              <div>
+                <p class="eyebrow">Skill Library</p>
+                <h2>&#1057;&#1082;&#1080;&#1083;&#1083;&#1099;</h2>
+                <p class="plans-subtitle">&#1041;&#1099;&#1089;&#1090;&#1088;&#1099;&#1081; &#1087;&#1086;&#1080;&#1089;&#1082; &#1080; &#1087;&#1086;&#1083;&#1085;&#1086;&#1077; &#1086;&#1082;&#1085;&#1086; skill markdown &#1080;&#1079; agent/skills.</p>
+              </div>
+              <div id="skills-stats" class="plans-stats"></div>
+            </section>
+
+            <section class="panel plans-toolbar skills-toolbar" aria-label="Skill filters">
+              <div class="plan-toolbar-cell plan-toolbar-search">
+                <label class="plan-search">
+                  <span>&#1055;&#1086;&#1080;&#1089;&#1082;</span>
+                  <input id="skill-search" type="search" placeholder="&#1085;&#1072;&#1079;&#1074;&#1072;&#1085;&#1080;&#1077;, description, &#1092;&#1072;&#1081;&#1083;" autocomplete="off" />
+                </label>
+              </div>
+              <div class="plan-toolbar-cell">
+                <span class="plan-toolbar-label">&#1058;&#1080;&#1087;</span>
+                <div id="skill-type-filters" class="plan-filter-row" aria-label="Skill type filters"></div>
+              </div>
+            </section>
+
+            <section class="plans-grid">
+              <section class="panel plan-list-panel">
+                <div class="panel-heading compact">
+                  <div>
+                    <p class="eyebrow">Registry</p>
+                    <h2>&#1057;&#1087;&#1080;&#1089;&#1086;&#1082; &#1089;&#1082;&#1080;&#1083;&#1083;&#1086;&#1074;</h2>
+                  </div>
+                  <div class="plan-list-source">
+                    <span id="skills-root">skills folder</span>
+                    <strong id="skills-visible-count">0 / 0</strong>
+                  </div>
+                </div>
+                <div id="skill-list" class="plan-list"></div>
+              </section>
+            </section>
+          </section>
+
+          <section id="skill-detail-modal" class="plan-detail-modal" aria-label="Skill detail" aria-modal="true" role="dialog" hidden>
+            <div class="plan-detail-backdrop" data-skill-close></div>
+            <article class="panel plan-detail-dialog">
+              <div class="plan-detail-head">
+                <div>
+                  <p id="skill-detail-kicker" class="eyebrow">Skill</p>
+                  <h2 id="skill-detail-title"></h2>
+                </div>
+                <button type="button" data-skill-close aria-label="Close">&times;</button>
+              </div>
+              <div id="skill-detail-meta" class="plan-detail-meta"></div>
+              <textarea id="skill-editor" class="plan-editor" spellcheck="false"></textarea>
+              <div class="plan-detail-actions">
+                <span id="skill-save-state" class="muted">editable markdown</span>
+                <button id="skill-save-btn" class="plan-save-btn" type="button">&#1057;&#1086;&#1093;&#1088;&#1072;&#1085;&#1080;&#1090;&#1100;</button>
+              </div>
+            </article>
+          </section>
+        </section>
+
+        <section id="empty-view" class="view" aria-label="&#1047;&#1072;&#1075;&#1083;&#1091;&#1096;&#1082;&#1072; &#1088;&#1072;&#1079;&#1076;&#1077;&#1083;&#1072;">
+          <section class="panel empty-panel">
+            <p class="eyebrow">Next</p>
+            <h2 id="empty-title">&#1056;&#1072;&#1079;&#1076;&#1077;&#1083;</h2>
+            <p class="muted">&#1069;&#1090;&#1086;&#1090; &#1088;&#1072;&#1079;&#1076;&#1077;&#1083; &#1086;&#1089;&#1090;&#1072;&#1074;&#1083;&#1077;&#1085; &#1082;&#1072;&#1082; &#1085;&#1072;&#1074;&#1080;&#1075;&#1072;&#1094;&#1080;&#1086;&#1085;&#1085;&#1072;&#1103; &#1090;&#1086;&#1095;&#1082;&#1072; v1. &#1043;&#1083;&#1072;&#1074;&#1085;&#1072;&#1103; &#1080; Kanban &#1091;&#1078;&#1077; &#1079;&#1072;&#1076;&#1072;&#1102;&#1090; &#1073;&#1072;&#1079;&#1086;&#1074;&#1099;&#1081; &#1089;&#1090;&#1077;&#1082; &#1080; &#1074;&#1080;&#1079;&#1091;&#1072;&#1083;&#1100;&#1085;&#1099;&#1081; &#1103;&#1079;&#1099;&#1082;.</p>
+          </section>
+        </section>
+      </main>
+      <footer class="app-footer">Agent Dashboard &middot; 2026</footer>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

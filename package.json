@@ -1,0 +1,7 @@
+{
+  "name": "agent-dashboard",
+  "private": true,
+  "version": "1.0.0",
+  "type": "commonjs",
+  "description": "Agent Dashboard — local cockpit UI for agent operations"
+}

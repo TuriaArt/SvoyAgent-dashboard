@@ -11,6 +11,9 @@ telemetry (JSONL logs, SQLite traces/tasks, markdown vault files) into an
 operational overview — and degrades gracefully to neutral placeholders when no
 agent data is present.
 
+> This fork adapts the dashboard for **SvoyAgentOS**. See "SvoyAgentOS
+> adaptation status" below for which sections read real data vs. placeholders.
+
 ## Features
 
 - **Operational telemetry** — health, pipeline, doctor, usage/token KPIs.
@@ -165,6 +168,23 @@ expose port 3001 directly.
 Tell the user: the URL it runs on, which auth is enabled, which data sources
 are connected (or that it runs on placeholders), and how to stop it
 (`systemctl --user stop agent-dashboard.service` or `kill <pid>`).
+
+## SvoyAgentOS adaptation status
+
+This fork is being adapted to run against a real [SvoyAgentOS](https://github.com/TuriaArt) server
+instead of iva. Progress so far:
+
+| Dashboard section | Status |
+| --- | --- |
+| **Skills library** | **Wired.** Reads SvoyAgentOS's recipe store (`%LOCALAPPDATA%\Meridian\svoyagent\recipes`, same default `FsRecipeStore` uses) instead of `agent/skills/`. UI labels updated to "Recipes"; the `/api/skills` API path is kept as-is. |
+| Task kanban | Placeholder. SvoyAgentOS's orchestrator writes a linear run log (SvoyBloknot notebook "Задачи агента"), not a todo-style kanban board — no direct data mapping yet. |
+| Plans library, Project vault navigator | Placeholder. SvoyAgentOS has no "project" or "plan" concept to map onto. |
+| Operational telemetry (usage/tokens) | Placeholder. SvoyAgentOS's LLM providers don't log token usage anywhere yet. |
+| Memory analysis | Placeholder. Needs a typed-card memory-tree layer over SvoyBloknot that doesn't exist yet. |
+| Live SSE stream | Placeholder. SvoyAgentOS's SSE is per-request (tied to one orchestrator run), not a global event bus with replay. |
+
+Placeholders aren't bugs — they render the dashboard's built-in neutral fallback until the
+matching SvoyAgentOS-side data source exists.
 
 ## Configuration
 

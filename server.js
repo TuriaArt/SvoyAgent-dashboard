@@ -1256,99 +1256,114 @@ function safePlanPath(planId) {
   return filePath;
 }
 
+// SvoyAgentOS's default recipe store — same portable root Rust-side install_paths.rs
+// uses for backends/omnix (see SvoyAgent-File/src-tauri/src/install_paths.rs).
+function defaultRecipesDir() {
+  const localAppData = process.env.LOCALAPPDATA || "";
+  if (!localAppData) return "";
+  return path.join(localAppData, "Meridian", "svoyagent", "recipes");
+}
+
 function resolveSkillsDir() {
   const candidates = [
     agentEnv("SKILLS_DIR"),
-    agentPath("agent", "skills"),
+    defaultRecipesDir(),
+    agentPath("agent", "skills"), // legacy iva layout, kept as a last-resort fallback
   ].filter(Boolean);
   return candidates.find((candidate) => fileExists(candidate)) || candidates[0] || "";
 }
 
-function extractSkillTitle(name, text) {
-  const frontName = text.match(/^name\s*:\s*["']?([^"'\n]+)["']?/im);
-  if (frontName) return frontName[1].trim();
-  const h1 = text.match(/^#\s+(.+)$/m);
-  if (h1) return h1[1].trim().replace(/`/g, "");
-  return name.replace(/\.md$/i, "").replace(/[-_]+/g, " ");
+// Малый парсер YAML-шапки рецептов SvoyAgentOS (frontmatter между "---") — без
+// внешних зависимостей, поскольку chip-dashboard принципиально zero-dependency.
+// Понимает плоские "key: value", инлайн-списки "key: [a, b]" и блочные списки
+// ("key:" + строки "  - value") — этого достаточно для формата RecipeFrontmatter
+// (id/title/description/stepType/tags/version), см. server/src/recipes/frontmatter.ts
+// в основном репозитории SvoyAgentOS.
+function parseRecipeFrontmatter(text) {
+  const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  if (!match) return { frontmatter: {}, body: text };
+  const [, block, body] = match;
+  const frontmatter = {};
+  let listKey = null;
+  for (const line of block.split(/\r?\n/)) {
+    const listItem = line.match(/^\s+-\s*(.*)$/);
+    if (listItem && listKey) {
+      frontmatter[listKey].push(listItem[1].trim().replace(/^["']|["']$/g, ""));
+      continue;
+    }
+    const kv = line.match(/^([A-Za-z0-9_]+)\s*:\s*(.*)$/);
+    if (!kv) continue;
+    const [, key, rawValue] = kv;
+    const value = rawValue.trim();
+    if (value === "") {
+      frontmatter[key] = [];
+      listKey = key;
+      continue;
+    }
+    listKey = null;
+    if (/^\[.*\]$/.test(value)) {
+      frontmatter[key] = value
+        .slice(1, -1)
+        .split(",")
+        .map((v) => v.trim().replace(/^["']|["']$/g, ""))
+        .filter(Boolean);
+    } else if (/^-?\d+$/.test(value)) {
+      frontmatter[key] = Number(value);
+    } else {
+      frontmatter[key] = value.replace(/^["']|["']$/g, "");
+    }
+  }
+  return { frontmatter, body: body.trim() };
 }
 
-function extractSkillSummary(text) {
-  const description = text.match(/^description\s*:\s*["']?([^"'\n]+)["']?/im);
-  if (description) return description[1].trim().replace(/\s+/g, " ").slice(0, 260);
-  return extractPlanSummary(text);
-}
-
+// Рецепты SvoyAgentOS всегда плоские файлы "<id>.md" (см. FsRecipeStore) — в
+// отличие от iva-скиллов здесь нет вложенных папок-с-SKILL.md.
 function readSkills() {
   const dir = resolveSkillsDir();
   if (!dir || !fileExists(dir)) return { ok: false, root: dir, skills: [], stats: {} };
-  const entries = fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name));
-  const skills = [];
-  for (const entry of entries) {
-    if (entry.isDirectory()) {
-      const skillFile = path.join(dir, entry.name, "SKILL.md");
-      const fallbackFile = fs
-        .readdirSync(path.join(dir, entry.name), { withFileTypes: true })
-        .filter((child) => child.isFile() && child.name.toLowerCase().endsWith(".md"))
-        .map((child) => path.join(dir, entry.name, child.name))
-        .sort()[0];
-      const filePath = fileExists(skillFile) ? skillFile : fallbackFile;
-      if (!filePath || !fileExists(filePath)) continue;
-      const stat = fs.statSync(filePath);
-      const folder = path.join(dir, entry.name);
-      const hasScripts = fileExists(path.join(folder, "scripts"));
-      const text = readText(filePath);
-      const relPath = path.relative(dir, filePath).replace(/\\/g, "/");
-      skills.push({
-        id: relPath,
-        name: entry.name,
-        title: extractSkillTitle(entry.name, text),
-        summary: extractSkillSummary(text),
-        type: "folder",
-        mainFile: path.basename(filePath),
-        hasScripts,
-        size: stat.size,
-        updatedAt: stat.mtime.toISOString(),
-        updatedLabel: dateTimeLabel(stat.mtime),
-        content: text,
-        path: filePath,
-      });
-    } else if (entry.isFile() && entry.name.toLowerCase().endsWith(".md")) {
-      const filePath = path.join(dir, entry.name);
-      const stat = fs.statSync(filePath);
-      const text = readText(filePath);
-      skills.push({
-        id: entry.name,
-        name: entry.name.replace(/\.md$/i, ""),
-        title: extractSkillTitle(entry.name, text),
-        summary: extractSkillSummary(text),
-        type: "file",
-        mainFile: entry.name,
-        hasScripts: false,
-        size: stat.size,
-        updatedAt: stat.mtime.toISOString(),
-        updatedLabel: dateTimeLabel(stat.mtime),
-        content: text,
-        path: filePath,
-      });
-    }
-  }
+  const entries = fs
+    .readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith(".md"))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const skills = entries.map((entry) => {
+    const filePath = path.join(dir, entry.name);
+    const stat = fs.statSync(filePath);
+    const text = readText(filePath);
+    const { frontmatter } = parseRecipeFrontmatter(text);
+    return {
+      id: entry.name,
+      name: entry.name.replace(/\.md$/i, ""),
+      title: frontmatter.title || entry.name.replace(/\.md$/i, ""),
+      summary: String(frontmatter.description || "").slice(0, 260),
+      type: "file",
+      mainFile: entry.name,
+      hasScripts: false,
+      stepType: frontmatter.stepType || "",
+      tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
+      size: stat.size,
+      updatedAt: stat.mtime.toISOString(),
+      updatedLabel: dateTimeLabel(stat.mtime),
+      content: text,
+      path: filePath,
+    };
+  });
   const stats = skills.reduce(
     (acc, skill) => {
       acc.total += 1;
       acc[skill.type] = (acc[skill.type] || 0) + 1;
-      if (skill.hasScripts) acc.scripts += 1;
+      if (skill.stepType) acc[`stepType:${skill.stepType}`] = (acc[`stepType:${skill.stepType}`] || 0) + 1;
       return acc;
     },
-    { total: 0, folder: 0, file: 0, scripts: 0 },
+    { total: 0, file: 0 },
   );
   return { ok: true, root: dir, skills, stats };
 }
 
 function safeSkillPath(skillId) {
   const dir = resolveSkillsDir();
-  const rel = String(skillId || "").replace(/\\/g, "/");
-  if (!rel.toLowerCase().endsWith(".md") || rel.includes("..")) return null;
-  const filePath = path.normalize(path.join(dir, rel));
+  const fileName = path.basename(String(skillId || ""));
+  if (!fileName.toLowerCase().endsWith(".md")) return null;
+  const filePath = path.normalize(path.join(dir, fileName));
   const normalizedDir = path.normalize(dir + path.sep);
   if (!filePath.startsWith(normalizedDir)) return null;
   return filePath;

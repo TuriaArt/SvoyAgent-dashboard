@@ -18,7 +18,7 @@
           <button class="nav-tab" type="button" data-view="kanban">Kanban</button>
           <button class="nav-tab" type="button" data-view="plans">Планы</button>
           <button class="nav-tab" type="button" data-view="projects">Проекты</button>
-          <button class="nav-tab" type="button" data-view="skills">Скиллы</button>
+          <button class="nav-tab" type="button" data-view="skills">Рецепты</button>
         </nav>
       </header>
 
@@ -397,18 +397,18 @@
           </section>
         </section>
 
-        <section id="skills-view" class="view" aria-label="Skills">
+        <section id="skills-view" class="view" aria-label="Recipes">
           <section class="plans-shell skills-shell">
             <section class="panel plans-hero skills-hero">
               <div>
-                <p class="eyebrow">Skill Library</p>
-                <h2>&#1057;&#1082;&#1080;&#1083;&#1083;&#1099;</h2>
-                <p class="plans-subtitle">&#1041;&#1099;&#1089;&#1090;&#1088;&#1099;&#1081; &#1087;&#1086;&#1080;&#1089;&#1082; &#1080; &#1087;&#1086;&#1083;&#1085;&#1086;&#1077; &#1086;&#1082;&#1085;&#1086; skill markdown &#1080;&#1079; agent/skills.</p>
+                <p class="eyebrow">Recipe Library</p>
+                <h2>&#1056;&#1077;&#1094;&#1077;&#1087;&#1090;&#1099;</h2>
+                <p class="plans-subtitle">&#1041;&#1099;&#1089;&#1090;&#1088;&#1099;&#1081; &#1087;&#1086;&#1080;&#1089;&#1082; &#1080; &#1087;&#1086;&#1083;&#1085;&#1086;&#1077; &#1086;&#1082;&#1085;&#1086; markdown-&#1088;&#1077;&#1094;&#1077;&#1087;&#1090;&#1086;&#1074; SvoyAgentOS.</p>
               </div>
               <div id="skills-stats" class="plans-stats"></div>
             </section>
 
-            <section class="panel plans-toolbar skills-toolbar" aria-label="Skill filters">
+            <section class="panel plans-toolbar skills-toolbar" aria-label="Recipe filters">
               <div class="plan-toolbar-cell plan-toolbar-search">
                 <label class="plan-search">
                   <span>&#1055;&#1086;&#1080;&#1089;&#1082;</span>
@@ -417,7 +417,7 @@
               </div>
               <div class="plan-toolbar-cell">
                 <span class="plan-toolbar-label">&#1058;&#1080;&#1087;</span>
-                <div id="skill-type-filters" class="plan-filter-row" aria-label="Skill type filters"></div>
+                <div id="skill-type-filters" class="plan-filter-row" aria-label="Recipe type filters"></div>
               </div>
             </section>
 
@@ -426,10 +426,10 @@
                 <div class="panel-heading compact">
                   <div>
                     <p class="eyebrow">Registry</p>
-                    <h2>&#1057;&#1087;&#1080;&#1089;&#1086;&#1082; &#1089;&#1082;&#1080;&#1083;&#1083;&#1086;&#1074;</h2>
+                    <h2>&#1057;&#1087;&#1080;&#1089;&#1086;&#1082; &#1088;&#1077;&#1094;&#1077;&#1087;&#1090;&#1086;&#1074;</h2>
                   </div>
                   <div class="plan-list-source">
-                    <span id="skills-root">skills folder</span>
+                    <span id="skills-root">recipes folder</span>
                     <strong id="skills-visible-count">0 / 0</strong>
                   </div>
                 </div>
@@ -438,12 +438,12 @@
             </section>
           </section>
 
-          <section id="skill-detail-modal" class="plan-detail-modal" aria-label="Skill detail" aria-modal="true" role="dialog" hidden>
+          <section id="skill-detail-modal" class="plan-detail-modal" aria-label="Recipe detail" aria-modal="true" role="dialog" hidden>
             <div class="plan-detail-backdrop" data-skill-close></div>
             <article class="panel plan-detail-dialog">
               <div class="plan-detail-head">
                 <div>
-                  <p id="skill-detail-kicker" class="eyebrow">Skill</p>
+                  <p id="skill-detail-kicker" class="eyebrow">Recipe</p>
                   <h2 id="skill-detail-title"></h2>
                 </div>
                 <button type="button" data-skill-close aria-label="Close">&times;</button>
